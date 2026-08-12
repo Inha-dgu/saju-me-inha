@@ -10,6 +10,17 @@ import {
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const MINUTES = Array.from({ length: 60 }, (_, m) => m);
 const PILLAR_LABELS = ['연주', '월주', '일주', '시주'];
+const THEME_KEY = 'saju-theme';
+
+function getInitialTheme() {
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    if (saved === 'dark' || saved === 'light') return saved;
+  } catch {
+    /* ignore */
+  }
+  return 'light';
+}
 
 function defaultBirthdate() {
   const y = new Date().getFullYear() - 25;
@@ -40,6 +51,7 @@ export default function App() {
 
   const [readings, setReadings] = useState([]);
   const [readingsLoading, setReadingsLoading] = useState(true);
+  const [theme, setTheme] = useState(getInitialTheme);
   const ignoreInterpretRef = useRef(false);
 
   const isLunar = calendar === 'lunar';
@@ -113,6 +125,15 @@ export default function App() {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [clearForm]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('theme-dark', theme === 'dark');
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      /* ignore */
+    }
+  }, [theme]);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -232,6 +253,16 @@ export default function App() {
   return (
     <>
       <div className="bg-glow" aria-hidden="true" />
+
+      <button
+        type="button"
+        className="theme-toggle"
+        onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+        aria-label={theme === 'dark' ? '라이트 테마로 전환' : '다크 테마로 전환'}
+        title={theme === 'dark' ? '라이트 테마' : '다크 테마'}
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
 
       <div className="app-shell">
         <aside className="history-sidebar" aria-labelledby="history-heading">
