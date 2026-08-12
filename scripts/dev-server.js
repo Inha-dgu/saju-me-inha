@@ -89,6 +89,7 @@ const server = http.createServer(async (req, res) => {
 
   const candidates = [
     path.join(root, pathname),
+    path.join(root, 'dist', pathname),
     path.join(root, 'public', pathname),
   ];
 

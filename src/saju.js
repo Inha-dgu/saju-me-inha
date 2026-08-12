@@ -9,20 +9,25 @@ import { calculateFourPillars } from 'manseryeok';
  * @property {number} year
  * @property {number} month
  * @property {number} day
- * @property {number} hour
- * @property {number} minute
+ * @property {number} [hour]
+ * @property {number} [minute]
+ * @property {boolean} [timeUnknown]
  */
 
 /**
  * @param {SajuInput} input
  */
 export function computeSaju(input) {
+  const timeUnknown = Boolean(input.timeUnknown);
+  const hour = timeUnknown ? 12 : Number(input.hour);
+  const minute = timeUnknown ? 0 : Number(input.minute);
+
   const result = calculateFourPillars({
     year: input.year,
     month: input.month,
     day: input.day,
-    hour: input.hour,
-    minute: input.minute,
+    hour,
+    minute,
     isLunar: input.isLunar,
     isLeapMonth: input.isLunar ? Boolean(input.isLeapMonth) : false,
     gender: input.gender,
@@ -55,19 +60,27 @@ export function computeSaju(input) {
     };
   });
 
+  const summary = timeUnknown
+    ? `${result.yearString}연주, ${result.monthString}월주, ${result.dayString}일주 (시주 미상)`
+    : result.toString();
+  const summaryHanja = timeUnknown
+    ? result.toHanjaString().replace(/,?\s*[^,]*時柱/, '').replace(/,\s*$/, '') + ' (시주 미상)'
+    : result.toHanjaString();
+
   return {
     name: input.name || '',
     gender: input.gender,
     isLunar: input.isLunar,
+    timeUnknown,
     birth: {
       year: input.year,
       month: input.month,
       day: input.day,
-      hour: input.hour,
-      minute: input.minute,
+      hour: timeUnknown ? null : hour,
+      minute: timeUnknown ? null : minute,
     },
-    summary: result.toString(),
-    summaryHanja: result.toHanjaString(),
+    summary,
+    summaryHanja,
     pillars,
     voidBranches: result.voidBranches,
     luckPillars: result.luckPillars
@@ -88,7 +101,9 @@ export function computeSaju(input) {
  * @param {ReturnType<typeof computeSaju>} saju
  */
 export function formatSajuForPrompt(saju) {
-  const pillarLines = saju.pillars
+  const pillarLines = (saju.timeUnknown
+    ? saju.pillars.filter((p) => p.key !== 'hour')
+    : saju.pillars)
     .map(
       (p) =>
         `${p.title}: ${p.korean} (${p.stemHanja}${p.branchHanja}) / 천간오행 ${p.stemElement}, 지지오행 ${p.branchElement} / 십신 천간 ${p.tenGodStem}, 지지 ${p.tenGodBranch}`,
@@ -102,12 +117,16 @@ export function formatSajuForPrompt(saju) {
         saju.luckPillars.pillars.map((p) => `${p.age}세 ${p.korean}`).join(', ');
 
   const birth = saju.birth;
-  const birthStr = `${birth.year}-${String(birth.month).padStart(2, '0')}-${String(birth.day).padStart(2, '0')} ${String(birth.hour).padStart(2, '0')}:${String(birth.minute).padStart(2, '0')} (${saju.isLunar ? '음력' : '양력'})`;
+  const dateStr = `${birth.year}-${String(birth.month).padStart(2, '0')}-${String(birth.day).padStart(2, '0')}`;
+  const birthStr = saju.timeUnknown
+    ? `${dateStr} 출생 시각 모름 (${saju.isLunar ? '음력' : '양력'})`
+    : `${dateStr} ${String(birth.hour).padStart(2, '0')}:${String(birth.minute).padStart(2, '0')} (${saju.isLunar ? '음력' : '양력'})`;
 
   return [
     saju.name ? `이름: ${saju.name}` : null,
     `성별: ${saju.gender === 'male' ? '남성' : '여성'}`,
     `출생: ${birthStr}`,
+    saju.timeUnknown ? '시주: 출생 시각 미상으로 해석에서 제외' : null,
     '',
     '사주팔자:',
     pillarLines,

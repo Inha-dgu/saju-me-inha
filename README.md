@@ -13,8 +13,8 @@ npm run serve
 
 ## Vercel
 
-1. **Settings → Environment Variables**에 `GEMINI_API_KEY` 추가 (Production + Preview)
-2. Output Directory는 **비워 두기**
+1. **Settings → Environment Variables**에 `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` 추가 (Production + Preview)
+2. Output Directory는 `dist` (`vercel.json`에 설정됨)
 3. Redeploy
 
 키는 브라우저에 넣지 않고 `/api/interpret` 서버리스 함수에서만 사용합니다.
