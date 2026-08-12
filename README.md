@@ -57,9 +57,13 @@ npm run serve
 ## 배포 (Netlify)
 
 1. Netlify에서 이 저장소를 연결합니다.
-2. Environment variables에 `GEMINI_API_KEY`를 설정합니다.
-3. Build command: `npm run build`
-4. Publish directory: `.` (루트)
+2. **Environment variables**에 `GEMINI_API_KEY`를 설정합니다. (없으면 빌드 실패)
+3. `netlify.toml`이 이미 아래처럼 설정되어 있습니다.
+   - Build command: `npm run build`
+   - Publish directory: `.` (루트 — `dist`가 아님)
+4. Deploy를 다시 트리거합니다.
+
+Publish directory를 `dist`로 두면 `index.html`이 없어 **404**가 납니다.
 
 ## 스크립트
 
