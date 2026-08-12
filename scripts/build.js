@@ -3,18 +3,18 @@ const path = require('path');
 const esbuild = require('esbuild');
 
 const root = path.join(__dirname, '..');
-const distDir = path.join(root, 'dist');
+const outDir = path.join(root, 'public');
 
 function packageStaticSite() {
-  fs.mkdirSync(distDir, { recursive: true });
+  fs.mkdirSync(outDir, { recursive: true });
 
   const html = fs
     .readFileSync(path.join(root, 'index.html'), 'utf8')
-    .replace(/src="dist\/bundle\.js"/, 'src="./bundle.js"')
+    .replace(/src="(?:dist|public)\/bundle\.js"/, 'src="./bundle.js"')
     .replace(/href="style\.css"/, 'href="./style.css"');
 
-  fs.writeFileSync(path.join(distDir, 'index.html'), html);
-  fs.copyFileSync(path.join(root, 'style.css'), path.join(distDir, 'style.css'));
+  fs.writeFileSync(path.join(outDir, 'index.html'), html);
+  fs.copyFileSync(path.join(root, 'style.css'), path.join(outDir, 'style.css'));
 }
 
 const watch = process.argv.includes('--watch');
@@ -23,7 +23,7 @@ async function main() {
   const options = {
     entryPoints: [path.join(root, 'src/main.js')],
     bundle: true,
-    outfile: path.join(distDir, 'bundle.js'),
+    outfile: path.join(outDir, 'bundle.js'),
     format: 'esm',
     plugins: [
       {
@@ -43,7 +43,7 @@ async function main() {
     console.log('watching…');
   } else {
     await esbuild.build(options);
-    console.log('build complete → dist/');
+    console.log('build complete → public/');
   }
 }
 

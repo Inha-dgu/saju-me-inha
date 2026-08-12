@@ -89,7 +89,7 @@ const server = http.createServer(async (req, res) => {
 
   const candidates = [
     path.join(root, pathname),
-    path.join(root, 'dist', pathname),
+    path.join(root, 'public', pathname),
   ];
 
   const filePath = candidates.find((p) => fs.existsSync(p) && fs.statSync(p).isFile());
