@@ -3,6 +3,7 @@ const path = require('path');
 const esbuild = require('esbuild');
 
 const root = path.join(__dirname, '..');
+const distDir = path.join(root, 'dist');
 const envPath = path.join(root, '.env');
 
 function loadEnvFile() {
@@ -27,6 +28,18 @@ function loadEnvFile() {
   return out;
 }
 
+function packageStaticSite() {
+  fs.mkdirSync(distDir, { recursive: true });
+
+  const html = fs
+    .readFileSync(path.join(root, 'index.html'), 'utf8')
+    .replace(/src="dist\/bundle\.js"/, 'src="./bundle.js"')
+    .replace(/href="style\.css"/, 'href="./style.css"');
+
+  fs.writeFileSync(path.join(distDir, 'index.html'), html);
+  fs.copyFileSync(path.join(root, 'style.css'), path.join(distDir, 'style.css'));
+}
+
 const fileEnv = loadEnvFile();
 const apiKey = process.env.GEMINI_API_KEY || fileEnv.GEMINI_API_KEY || '';
 
@@ -41,11 +54,21 @@ async function main() {
   const options = {
     entryPoints: [path.join(root, 'src/main.js')],
     bundle: true,
-    outfile: path.join(root, 'dist/bundle.js'),
+    outfile: path.join(distDir, 'bundle.js'),
     format: 'esm',
     define: {
       __GEMINI_API_KEY__: JSON.stringify(apiKey),
     },
+    plugins: [
+      {
+        name: 'package-static',
+        setup(build) {
+          build.onEnd((result) => {
+            if (result.errors.length === 0) packageStaticSite();
+          });
+        },
+      },
+    ],
   };
 
   if (watch) {
@@ -54,7 +77,7 @@ async function main() {
     console.log('watching…');
   } else {
     await esbuild.build(options);
-    console.log('build complete');
+    console.log('build complete → dist/ (index.html, style.css, bundle.js)');
   }
 }
 
