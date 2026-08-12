@@ -31,6 +31,8 @@ function loadEnvFile() {
 function packageStaticSite() {
   fs.mkdirSync(distDir, { recursive: true });
 
+  // Keep root index.html working on Vercel (no outputDirectory).
+  // Also write a self-contained dist/ for Netlify / local serve.
   const html = fs
     .readFileSync(path.join(root, 'index.html'), 'utf8')
     .replace(/src="dist\/bundle\.js"/, 'src="./bundle.js"')
@@ -44,8 +46,9 @@ const fileEnv = loadEnvFile();
 const apiKey = process.env.GEMINI_API_KEY || fileEnv.GEMINI_API_KEY || '';
 
 if (!apiKey) {
-  console.error('GEMINI_API_KEY가 없습니다. .env 파일 또는 환경변수를 설정하세요.');
-  process.exit(1);
+  console.warn(
+    '[warn] GEMINI_API_KEY가 없습니다. 사이트는 배포되지만 AI 해석은 실패합니다. Vercel Environment Variables에 키를 추가하세요.',
+  );
 }
 
 const watch = process.argv.includes('--watch');
@@ -77,7 +80,7 @@ async function main() {
     console.log('watching…');
   } else {
     await esbuild.build(options);
-    console.log('build complete → dist/ (index.html, style.css, bundle.js)');
+    console.log('build complete → dist/ + root index.html uses dist/bundle.js');
   }
 }
 
