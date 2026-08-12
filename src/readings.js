@@ -9,6 +9,17 @@ function getClient() {
   return supabase;
 }
 
+async function requireUserId() {
+  const {
+    data: { user },
+    error,
+  } = await getClient().auth.getUser();
+
+  if (error) throw error;
+  if (!user) throw new Error('로그인이 필요합니다.');
+  return user.id;
+}
+
 const READING_COLUMNS =
   'id, name, created_at, gender, is_lunar, is_leap_month, time_unknown, birth_year, birth_month, birth_day, birth_hour, birth_minute, saju_result, interpretation';
 
@@ -38,9 +49,11 @@ const READING_COLUMNS =
  * @returns {Promise<SajuReading>}
  */
 export async function saveSajuReading(payload) {
+  const userId = await requireUserId();
   const { saju, interpretation = null, ...input } = payload;
   const name = input.name?.trim() || null;
   const row = {
+    user_id: userId,
     name,
     gender: input.gender,
     is_lunar: input.isLunar,
@@ -61,6 +74,7 @@ export async function saveSajuReading(payload) {
     const { data: existing, error: findError } = await getClient()
       .from('saju_readings')
       .select('id')
+      .eq('user_id', userId)
       .eq('name', name)
       .eq('gender', input.gender)
       .eq('is_lunar', input.isLunar)
@@ -119,6 +133,8 @@ export async function getSajuReading(id) {
  * @returns {Promise<SajuReading[]>}
  */
 export async function listSajuReadings() {
+  await requireUserId();
+
   const { data, error } = await getClient()
     .from('saju_readings')
     .select(READING_COLUMNS)

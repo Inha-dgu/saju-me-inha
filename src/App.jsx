@@ -7,6 +7,7 @@ import {
   saveSajuReading,
   updateReadingInterpretation,
 } from './readings.js';
+import { getUserLabel, signInWithGoogle, signOut, useAuth } from './auth.js';
 
 const HOURS = Array.from({ length: 24 }, (_, h) => h);
 const MINUTES = Array.from({ length: 60 }, (_, m) => m);
@@ -51,12 +52,15 @@ export default function App() {
   const [showInterpret, setShowInterpret] = useState(false);
 
   const [readings, setReadings] = useState([]);
-  const [readingsLoading, setReadingsLoading] = useState(true);
+  const [readingsLoading, setReadingsLoading] = useState(false);
   const [theme, setTheme] = useState(getInitialTheme);
+  const [authBusy, setAuthBusy] = useState(false);
+  const { user, loading: authLoading } = useAuth();
   const ignoreInterpretRef = useRef(false);
 
   const isLunar = calendar === 'lunar';
-  const busy = interpreting;
+  const busy = interpreting || authBusy;
+  const isLoggedIn = Boolean(user);
 
   const clearForm = useCallback(() => {
     ignoreInterpretRef.current = true;
@@ -94,6 +98,12 @@ export default function App() {
     let cancelled = false;
 
     async function loadReadings() {
+      if (!user) {
+        setReadings([]);
+        setReadingsLoading(false);
+        return;
+      }
+
       setReadingsLoading(true);
       try {
         const rows = await listSajuReadings();
@@ -101,6 +111,7 @@ export default function App() {
       } catch (err) {
         console.error('[readings]', err);
         if (!cancelled) {
+          setReadings([]);
           setFormError(
             err instanceof Error
               ? `저장된 사주를 불러오지 못했습니다: ${err.message}`
@@ -112,11 +123,11 @@ export default function App() {
       }
     }
 
-    loadReadings();
+    if (!authLoading) loadReadings();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [user, authLoading]);
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -135,6 +146,31 @@ export default function App() {
       /* ignore */
     }
   }, [theme]);
+
+  async function handleGoogleSignIn() {
+    setFormError('');
+    setAuthBusy(true);
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Google 로그인에 실패했습니다.');
+      setAuthBusy(false);
+    }
+  }
+
+  async function handleSignOut() {
+    setFormError('');
+    setAuthBusy(true);
+    try {
+      await signOut();
+      clearForm();
+      setReadings([]);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : '로그아웃에 실패했습니다.');
+    } finally {
+      setAuthBusy(false);
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -166,10 +202,23 @@ export default function App() {
       const next = computeSaju(input);
       setSaju(next);
 
-      const saved = await saveSajuReading({ ...input, saju: next });
-      setCurrentReadingId(saved.id);
-      setReadings((prev) => [saved, ...prev.filter((row) => row.id !== saved.id)]);
-      await interpretAndSave(saved.id, next);
+      let readingId = null;
+      if (user) {
+        try {
+          const saved = await saveSajuReading({ ...input, saju: next });
+          readingId = saved.id;
+          setCurrentReadingId(saved.id);
+          setReadings((prev) => [saved, ...prev.filter((row) => row.id !== saved.id)]);
+        } catch (saveErr) {
+          setFormError(
+            saveErr instanceof Error
+              ? `사주는 계산됐지만 저장하지 못했습니다: ${saveErr.message}`
+              : '사주는 계산됐지만 저장하지 못했습니다.',
+          );
+        }
+      }
+
+      await interpretAndSave(readingId, next);
     } catch (err) {
       setSaju(null);
       setCurrentReadingId(null);
@@ -273,22 +322,76 @@ export default function App() {
     <>
       <div className="bg-glow" aria-hidden="true" />
 
-      <button
-        type="button"
-        className="theme-toggle"
-        onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
-        aria-label={theme === 'dark' ? '라이트 테마로 전환' : '다크 테마로 전환'}
-        title={theme === 'dark' ? '라이트 테마' : '다크 테마'}
-      >
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </button>
+      <div className="top-bar">
+        <div className="auth-bar" aria-live="polite">
+          {authLoading ? (
+            <span className="auth-status">로그인 확인 중…</span>
+          ) : isLoggedIn ? (
+            <div className="auth-user">
+              {user.user_metadata?.avatar_url ? (
+                <img
+                  className="auth-avatar"
+                  src={user.user_metadata.avatar_url}
+                  alt=""
+                  width={28}
+                  height={28}
+                />
+              ) : (
+                <span className="auth-avatar auth-avatar-fallback" aria-hidden="true">
+                  {getUserLabel(user).slice(0, 1)}
+                </span>
+              )}
+              <span className="auth-name">{getUserLabel(user)}</span>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={handleSignOut}
+                disabled={busy}
+              >
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-google"
+              onClick={handleGoogleSignIn}
+              disabled={busy}
+            >
+              Google로 로그인
+            </button>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={() => setTheme((current) => (current === 'dark' ? 'light' : 'dark'))}
+          aria-label={theme === 'dark' ? '라이트 테마로 전환' : '다크 테마로 전환'}
+          title={theme === 'dark' ? '라이트 테마' : '다크 테마'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+      </div>
 
       <div className="app-shell">
         <aside className="history-sidebar" aria-labelledby="history-heading">
           <h2 id="history-heading" className="history-title">
             저장된 사주
           </h2>
-          {readingsLoading ? (
+          {!authLoading && !isLoggedIn ? (
+            <div className="history-auth-prompt">
+              <p className="history-empty">Google로 로그인하면 사주를 저장하고 다시 볼 수 있어요.</p>
+              <button
+                type="button"
+                className="btn btn-google btn-block"
+                onClick={handleGoogleSignIn}
+                disabled={busy}
+              >
+                Google로 로그인
+              </button>
+            </div>
+          ) : readingsLoading ? (
             <p className="history-empty">불러오는 중…</p>
           ) : readings.length === 0 ? (
             <p className="history-empty">아직 저장된 사주가 없습니다.</p>
@@ -462,6 +565,9 @@ export default function App() {
                 >
                   사주 보기
                 </button>
+                {!authLoading && !isLoggedIn && (
+                  <p className="hint">로그인하지 않아도 사주를 볼 수 있지만, 저장은 로그인 후에만 됩니다.</p>
+                )}
               </form>
             </section>
 

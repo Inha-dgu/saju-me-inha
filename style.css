@@ -151,6 +151,131 @@ html.theme-dark .theme-toggle {
   background: rgba(46, 39, 33, 0.98);
 }
 
+.top-bar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.top-bar > * {
+  pointer-events: auto;
+}
+
+.auth-bar {
+  display: flex;
+  align-items: center;
+  max-width: calc(100% - 60px);
+}
+
+.auth-status {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(8px);
+}
+
+.auth-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
+}
+
+.auth-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.auth-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.auth-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-auth-prompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn-sm {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-ghost {
+  width: auto;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--surface);
+}
+
+.btn-google {
+  width: auto;
+  padding: 10px 16px;
+  background: #fff;
+  color: #3c4043;
+  border: 1px solid #dadce0;
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.12);
+}
+
+.btn-google:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #d2e3fc;
+}
+
+html.theme-dark .btn-google {
+  background: #2b2b2b;
+  color: #e8eaed;
+  border-color: #5f6368;
+}
+
+html.theme-dark .btn-google:hover:not(:disabled) {
+  background: #353535;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -193,6 +318,7 @@ body {
 .app-shell {
   max-width: 1120px;
   margin: 0 auto;
+  padding-top: 56px;
   display: grid;
   gap: 20px;
   align-items: start;
@@ -206,10 +332,8 @@ body {
 }
 
 .theme-toggle {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 20;
+  position: static;
+  flex-shrink: 0;
   width: 44px;
   height: 44px;
   border-radius: 50%;
