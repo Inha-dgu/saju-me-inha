@@ -65,6 +65,12 @@ async function main() {
           }));
           build.onLoad({ filter: /.*/, namespace: 'virtual-env' }, () => {
             const env = loadEnvFile();
+            console.log(
+              '[build] SUPABASE_URL:',
+              env.SUPABASE_URL ? 'set' : 'missing',
+              '/ SUPABASE_ANON_KEY:',
+              env.SUPABASE_ANON_KEY ? 'set' : 'missing',
+            );
             return {
               contents: [
                 `export const SUPABASE_URL = ${JSON.stringify(env.SUPABASE_URL || '')};`,

@@ -1,10 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from 'virtual:env';
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+const url = (SUPABASE_URL || '').trim();
+const anonKey = (SUPABASE_ANON_KEY || '').trim();
+
+if (!url || !anonKey) {
   console.warn(
-    '[supabase] SUPABASE_URL / SUPABASE_ANON_KEY가 없습니다. .env를 확인하세요.',
+    '[supabase] SUPABASE_URL / SUPABASE_ANON_KEY가 없습니다. Vercel Environment Variables를 확인하세요.',
   );
 }
 
-export const supabase = createClient(SUPABASE_URL || '', SUPABASE_ANON_KEY || '');
+export const supabase =
+  url && anonKey ? createClient(url, anonKey) : null;

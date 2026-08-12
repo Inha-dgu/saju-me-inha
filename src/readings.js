@@ -1,5 +1,14 @@
 import { supabase } from './supabase.js';
 
+function getClient() {
+  if (!supabase) {
+    throw new Error(
+      'Supabase가 설정되지 않았습니다. Vercel에 SUPABASE_URL / SUPABASE_ANON_KEY를 넣고 Redeploy 하세요.',
+    );
+  }
+  return supabase;
+}
+
 const READING_COLUMNS =
   'id, name, created_at, gender, is_lunar, is_leap_month, time_unknown, birth_year, birth_month, birth_day, birth_hour, birth_minute, saju_result, interpretation';
 
@@ -49,7 +58,7 @@ export async function saveSajuReading(payload) {
 
   let existingId = null;
   if (name) {
-    const { data: existing, error: findError } = await supabase
+    const { data: existing, error: findError } = await getClient()
       .from('saju_readings')
       .select('id')
       .eq('name', name)
@@ -70,8 +79,8 @@ export async function saveSajuReading(payload) {
   }
 
   const query = existingId
-    ? supabase.from('saju_readings').update(row).eq('id', existingId)
-    : supabase.from('saju_readings').insert(row);
+    ? getClient().from('saju_readings').update(row).eq('id', existingId)
+    : getClient().from('saju_readings').insert(row);
 
   const { data, error } = await query.select(READING_COLUMNS).single();
   if (error) throw error;
@@ -83,7 +92,7 @@ export async function saveSajuReading(payload) {
  * @param {string} interpretation
  */
 export async function updateReadingInterpretation(id, interpretation) {
-  const { error } = await supabase
+  const { error } = await getClient()
     .from('saju_readings')
     .update({ interpretation })
     .eq('id', id);
@@ -95,7 +104,7 @@ export async function updateReadingInterpretation(id, interpretation) {
  * @returns {Promise<SajuReading[]>}
  */
 export async function listSajuReadings() {
-  const { data, error } = await supabase
+  const { data, error } = await getClient()
     .from('saju_readings')
     .select(READING_COLUMNS)
     .order('created_at', { ascending: false })
