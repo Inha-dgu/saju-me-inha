@@ -276,9 +276,16 @@ body {
   gap: 6px;
 }
 
+.history-item {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
 .history-name {
   display: block;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 8px 10px;
   border-radius: var(--radius);
   font-family: inherit;
@@ -305,6 +312,31 @@ body {
   background: var(--accent-soft);
   border-color: var(--active-line);
   color: var(--accent);
+}
+
+.history-delete {
+  flex-shrink: 0;
+  width: 32px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.history-delete:hover:not(:disabled) {
+  color: #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+  border-color: rgba(192, 57, 43, 0.25);
+}
+
+.history-delete:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .site-header {

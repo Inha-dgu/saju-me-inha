@@ -101,6 +101,21 @@ export async function updateReadingInterpretation(id, interpretation) {
 }
 
 /**
+ * @param {string} id
+ * @returns {Promise<SajuReading | null>}
+ */
+export async function getSajuReading(id) {
+  const { data, error } = await getClient()
+    .from('saju_readings')
+    .select(READING_COLUMNS)
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+/**
  * @returns {Promise<SajuReading[]>}
  */
 export async function listSajuReadings() {
@@ -112,4 +127,13 @@ export async function listSajuReadings() {
 
   if (error) throw error;
   return data ?? [];
+}
+
+/**
+ * @param {string} id
+ */
+export async function deleteSajuReading(id) {
+  const { error } = await getClient().from('saju_readings').delete().eq('id', id);
+
+  if (error) throw error;
 }

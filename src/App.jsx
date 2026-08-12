@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { computeSaju, formatSajuForPrompt } from './saju.js';
 import { interpretWithGemini, renderInterpretation } from './gemini.js';
 import {
+  deleteSajuReading,
   listSajuReadings,
   saveSajuReading,
   updateReadingInterpretation,
@@ -207,6 +208,24 @@ export default function App() {
     }
   }
 
+  async function handleDeleteReading(event, row) {
+    event.stopPropagation();
+    if (busy) return;
+
+    const label = displayName(row.name);
+    if (!window.confirm(`「${label}」 사주 기록을 삭제할까요?`)) return;
+
+    try {
+      await deleteSajuReading(row.id);
+      setReadings((prev) => prev.filter((item) => item.id !== row.id));
+      if (row.id === currentReadingId) clearForm();
+    } catch (err) {
+      setFormError(
+        err instanceof Error ? err.message : '저장된 사주를 삭제하지 못했습니다.',
+      );
+    }
+  }
+
   function handleSelectReading(row) {
     if (row.id === currentReadingId) {
       clearForm();
@@ -276,7 +295,7 @@ export default function App() {
           ) : (
             <ul className="history-list">
               {readings.map((row) => (
-                <li key={row.id}>
+                <li key={row.id} className="history-item">
                   <button
                     type="button"
                     className={`history-name${row.id === currentReadingId ? ' is-active' : ''}`}
@@ -284,6 +303,16 @@ export default function App() {
                     disabled={busy && row.id !== currentReadingId}
                   >
                     {displayName(row.name)}
+                  </button>
+                  <button
+                    type="button"
+                    className="history-delete"
+                    onClick={(event) => handleDeleteReading(event, row)}
+                    disabled={busy}
+                    aria-label={`${displayName(row.name)} 삭제`}
+                    title="삭제"
+                  >
+                    ×
                   </button>
                 </li>
               ))}
