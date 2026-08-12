@@ -27,9 +27,9 @@ export default function App() {
   const [calendar, setCalendar] = useState('solar');
   const [leap, setLeap] = useState(false);
   const [birthdate, setBirthdate] = useState(defaultBirthdate);
-  const [hour, setHour] = useState('12');
-  const [minute, setMinute] = useState('0');
-  const [timeUnknown, setTimeUnknown] = useState(false);
+  const [hour, setHour] = useState('');
+  const [minute, setMinute] = useState('');
+  const [timeUnknown, setTimeUnknown] = useState(true);
 
   const [formError, setFormError] = useState('');
   const [saju, setSaju] = useState(null);
@@ -54,7 +54,7 @@ export default function App() {
     setBirthdate('');
     setHour('');
     setMinute('');
-    setTimeUnknown(false);
+    setTimeUnknown(true);
     setFormError('');
     setSaju(null);
     setCurrentReadingId(null);
@@ -122,6 +122,7 @@ export default function App() {
     setCurrentReadingId(null);
 
     try {
+      if (!name.trim()) throw new Error('이름을 입력해 주세요.');
       if (!birthdate) throw new Error('생년월일을 입력해 주세요.');
       if (!timeUnknown && (hour === '' || minute === '')) {
         throw new Error('출생 시각을 선택해 주세요.');
@@ -273,15 +274,14 @@ export default function App() {
 
               <form id="saju-form" onSubmit={handleSubmit} noValidate>
                 <div className="field">
-                  <label htmlFor="name">
-                    이름 <span className="optional">(선택)</span>
-                  </label>
+                  <label htmlFor="name">이름</label>
                   <input
                     type="text"
                     id="name"
                     name="name"
                     placeholder="홍길동"
                     autoComplete="name"
+                    required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
@@ -394,7 +394,12 @@ export default function App() {
                   </div>
                 </div>
 
-                <button type="submit" className="btn btn-primary" id="submit-btn" disabled={busy}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  id="submit-btn"
+                  disabled={busy || !name.trim()}
+                >
                   사주 보기
                 </button>
               </form>
