@@ -4,35 +4,10 @@ const esbuild = require('esbuild');
 
 const root = path.join(__dirname, '..');
 const distDir = path.join(root, 'dist');
-const envPath = path.join(root, '.env');
-
-function loadEnvFile() {
-  if (!fs.existsSync(envPath)) return {};
-  const out = {};
-  const text = fs.readFileSync(envPath, 'utf8');
-  for (const line of text.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let value = trimmed.slice(eq + 1).trim();
-    if (
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    ) {
-      value = value.slice(1, -1);
-    }
-    out[key] = value;
-  }
-  return out;
-}
 
 function packageStaticSite() {
   fs.mkdirSync(distDir, { recursive: true });
 
-  // Keep root index.html working on Vercel (no outputDirectory).
-  // Also write a self-contained dist/ for Netlify / local serve.
   const html = fs
     .readFileSync(path.join(root, 'index.html'), 'utf8')
     .replace(/src="dist\/bundle\.js"/, 'src="./bundle.js"')
@@ -40,15 +15,6 @@ function packageStaticSite() {
 
   fs.writeFileSync(path.join(distDir, 'index.html'), html);
   fs.copyFileSync(path.join(root, 'style.css'), path.join(distDir, 'style.css'));
-}
-
-const fileEnv = loadEnvFile();
-const apiKey = process.env.GEMINI_API_KEY || fileEnv.GEMINI_API_KEY || '';
-
-if (!apiKey) {
-  console.warn(
-    '[warn] GEMINI_API_KEY가 없습니다. 사이트는 배포되지만 AI 해석은 실패합니다. Vercel Environment Variables에 키를 추가하세요.',
-  );
 }
 
 const watch = process.argv.includes('--watch');
@@ -59,9 +25,6 @@ async function main() {
     bundle: true,
     outfile: path.join(distDir, 'bundle.js'),
     format: 'esm',
-    define: {
-      __GEMINI_API_KEY__: JSON.stringify(apiKey),
-    },
     plugins: [
       {
         name: 'package-static',
@@ -80,7 +43,7 @@ async function main() {
     console.log('watching…');
   } else {
     await esbuild.build(options);
-    console.log('build complete → dist/ + root index.html uses dist/bundle.js');
+    console.log('build complete → dist/');
   }
 }
 
