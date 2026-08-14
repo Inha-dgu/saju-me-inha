@@ -1,7 +1,7 @@
 {
   "name": "saju-me-inha",
-  "version": "1.0.0",
-  "description": "사주 해석 웹사이트 — manseryeok + Gemini",
+  "version": "0.1.0",
+  "description": "사주 해석 웹사이트",
   "scripts": {
     "build": "node scripts/build.js",
     "dev": "node scripts/build.js --watch",
@@ -11,22 +11,12 @@
     "type": "git",
     "url": "git+https://github.com/Inha-dgu/saju-me-inha.git"
   },
-  "keywords": [
-    "saju",
-    "manseryeok",
-    "gemini"
-  ],
+  "keywords": ["saju"],
   "author": "Inha Kim",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Inha-dgu/saju-me-inha/issues"
-  },
-  "homepage": "https://github.com/Inha-dgu/saju-me-inha#readme",
   "dependencies": {
-    "@supabase/supabase-js": "^2.112.3",
     "esbuild": "^0.28.2",
-    "manseryeok": "^2.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },

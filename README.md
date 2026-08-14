@@ -1,20 +1,24 @@
-# saju-me-inha
+# 내팔자야 (saju-me-inha)
 
-생년월일시로 사주팔자를 계산하고 Gemini로 해석하는 사이트입니다.
+사주 해석 웹사이트 — 새로 시작하는 프로젝트입니다.
 
-## 로컬
+## 로컬 실행
 
 ```bash
-cp .env.example .env   # GEMINI_API_KEY 입력
 npm install
 npm run build
 npm run serve
 ```
 
-## Vercel
+개발 중 파일 변경 감지:
 
-1. **Settings → Environment Variables**에 `GEMINI_API_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY` 추가 (Production + Preview)
-2. Output Directory는 `dist` (`vercel.json`에 설정됨)
-3. Redeploy
+```bash
+npm run dev   # 터미널 1
+npm run serve # 터미널 2
+```
 
-키는 브라우저에 넣지 않고 `/api/interpret` 서버리스 함수에서만 사용합니다.
+## 배포
+
+Vercel에 연결되어 있으며 `main` 브랜치 푸시 시 자동 배포됩니다.
+
+- https://saju-me-inha.vercel.app
